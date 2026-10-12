@@ -1,5 +1,8 @@
 #!/usr/bin/env python3
-"""Parent-facing trial class flyers (invite and reminder) in the Welcome Flyer style.
+"""Ambassador Studio trial class flyers (invite and reminder) in the Welcome Flyer style.
+
+These use the My Music Box palette, fonts, artwork and logo, which are reserved for
+Ambassador Studios. Basic licensed teachers get build_basic_trial_materials.py instead.
 
 Teachers print them and write their own date, time, place and contact on the lines.
 """
@@ -21,7 +24,7 @@ PLUM = colors.HexColor("#542E57")
 LINE = colors.HexColor("#B9C9D6")
 
 INVITE = dict(
-    filename="MyMusicBox_Trial_Class_Invite_Flyer.pdf",
+    filename="ambassador/Ambassador_Trial_Class_Invite_Flyer.pdf",
     title="Come try a group piano class!",
     subtitle="A free 30 minute trial class for children ages 4 to 7",
     cards=[
@@ -39,7 +42,7 @@ INVITE = dict(
 )
 
 REMINDER = dict(
-    filename="MyMusicBox_Trial_Class_Reminder_Flyer.pdf",
+    filename="ambassador/Ambassador_Trial_Class_Reminder_Flyer.pdf",
     title="See you at the trial class!",
     subtitle="We can't wait to make music with your child.",
     cards=[

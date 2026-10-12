@@ -1,5 +1,7 @@
 # Trial class Instagram captions
 
+These captions go with both the basic posts (`basic/instagram/`) and the Ambassador Studio posts (`ambassador/instagram/`).
+
 Use one caption with each post. Replace everything in [square brackets] with your own details before you post.
 
 Suggested order:
@@ -23,7 +25,7 @@ Your child will sing, move to the music, and play their first notes on the piano
 
 Only 8 spots. Send me a message to save yours.
 
-[Your name], Certified My Music Box Teacher
+[Your name], Book 1 Certified My Music Box Teacher
 
 #grouppiano #pianoforkids #kidsmusicclass #pianolessons #[yourcity]kids #[yourcity]
 

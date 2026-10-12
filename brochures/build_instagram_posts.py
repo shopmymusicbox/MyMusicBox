@@ -1,5 +1,7 @@
 #!/usr/bin/env python3
-"""Instagram post templates (1080 x 1350) for the trial class, in the Welcome Flyer style.
+"""Ambassador Studio Instagram posts (1080 x 1350) for the trial class, in the Welcome Flyer style.
+
+Reserved for Ambassador Studios (brand palette, fonts and artwork).
 
 Posts carry no dates or places, so teachers can post them as they are and put their
 own details in the caption (see instagram/captions.md).
@@ -10,9 +12,9 @@ import os
 from PIL import Image, ImageDraw, ImageFont
 
 HERE = os.path.dirname(os.path.abspath(__file__))
-OUT = os.path.join(HERE, "instagram")
+OUT = os.path.join(HERE, "ambassador", "instagram")
 FONTS = os.path.join(HERE, "fonts")
-ART = os.path.join(OUT, "header_art.png")
+ART = os.path.join(HERE, "instagram", "header_art.png")
 
 W, H = 1080, 1350
 SKY, CLOUD = "#DCEEF9", "#C9E4F6"
