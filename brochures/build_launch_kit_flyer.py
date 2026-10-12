@@ -20,22 +20,25 @@ TEAL, TEAL_TXT = colors.HexColor("#4AC3D4"), colors.HexColor("#0F4F58")
 ORANGE, ORANGE_TXT = colors.HexColor("#FAD294"), colors.HexColor("#845100")
 GREEN, GREEN_TXT = colors.HexColor("#C1D83F"), colors.HexColor("#4F5B0E")
 
+COMMUNITY = ("During your training: community class",
+             "Offer a free or paid music class at your local library or a preschool. Use your own "
+             "songs and games, since My Music Box songs are for certified teachers. Collect the names "
+             "of interested families.")
+
 STEPS = [
     ("Week 1", "Invite families",
-     "Share your flyer and social posts with families in your area.", LAVENDER, LAVENDER_TXT),
+     "Invite your community class families, and share your flyer and posts.", LAVENDER, LAVENDER_TXT),
     ("Week 2", "Trial class and info session",
-     "Children try a real group class while parents watch. Right after, you hold a short "
-     "info session for the parents.", TEAL, TEAL_TXT),
+     "30 minutes of My Music Box songs, then a short parent talk.", TEAL, TEAL_TXT),
     ("Week 3", "Enroll and start",
-     "Send your follow-up emails, enroll families, and start your class of 4 to 8.", ORANGE, ORANGE_TXT),
+     "Send follow-up emails, enroll families, start your class.", ORANGE, ORANGE_TXT),
 ]
 
 KIT = [
-    ("Trial class and info session plan", "One visit: a real class for the children, then a short talk for parents.",
-     TEAL),
-    ("Flyer and social post templates", "Ready to share the week you start inviting families.", LAVENDER),
-    ("Enrollment follow-up emails", "Turn that first visit into an enrolled class.", ORANGE),
-    ("Two live coaching calls", "Bring your questions during your first semester.", GREEN),
+    ("Trial class and info session plan", "30 minute class, then a short parent talk.", TEAL),
+    ("Flyer and social post templates", "Ready to share when you start inviting.", LAVENDER),
+    ("Enrollment follow-up emails", "Turn the first visit into enrollment.", ORANGE),
+    ("Two live coaching calls", "Bring questions in your first semester.", GREEN),
 ]
 
 
@@ -75,15 +78,36 @@ def build_overlay(page_w, page_h):
     c.drawCentredString(cx, Y(224), "Group Class Launch Kit")
     c.setFillColor(MUTED)
     c.setFont("Inter-Regular", 10.5)
-    c.drawCentredString(cx, Y(246), "From certified to your first full group class in three weeks.")
+    c.drawCentredString(cx, Y(246), "From your training to your first full group class.")
 
     width = RIGHT - LEFT
-
-    # three steps, styled like the flyer's three cards
     c.setFillColor(BLUE)
     c.setFont("Fredoka-SemiBold", 14)
-    c.drawString(LEFT, Y(280), "Your first group class, step by step")
-    gap, top, th, band = 14, 292, 146, 26
+    c.drawString(LEFT, Y(274), "Your path, step by step")
+
+    # during training: full-width community class card
+    top, band = 284, 24
+    title, body = COMMUNITY
+    body_lines = simpleSplit(body, "Inter-Regular", 9.5, width - 24)
+    ch = band + 12 + len(body_lines) * 13.5
+    c.setLineWidth(2)
+    c.setStrokeColor(GREEN)
+    c.setFillColor(colors.white)
+    c.roundRect(LEFT, Y(top + ch), width, ch, 10, stroke=1, fill=1)
+    c.setFillColor(GREEN)
+    rounded_top_band(c, LEFT, Y(top), width, band, 10)
+    c.setFillColor(GREEN_TXT)
+    c.setFont("Fredoka-SemiBold", 12)
+    c.drawString(LEFT + 12, Y(top + 16), title)
+    c.setFillColor(MUTED)
+    wrapped(c, body, "Inter-Regular", 9.5, LEFT + 12, top + band + 15, width - 24, page_h, 13.5)
+
+    # after certification: three week cards
+    after = top + ch + 20
+    c.setFillColor(BLUE)
+    c.setFont("Fredoka-Medium", 11)
+    c.drawString(LEFT, Y(after), "After your Book 1 certification")
+    gap, top, th = 14, after + 10, 114
     tw = (width - 2 * gap) / 3
     for i, (week, title, body, accent, accent_txt) in enumerate(STEPS):
         x = LEFT + i * (tw + gap)
@@ -92,23 +116,26 @@ def build_overlay(page_w, page_h):
         c.setFillColor(colors.white)
         c.roundRect(x, Y(top + th), tw, th, 10, stroke=1, fill=1)
         c.setFillColor(accent)
-        rounded_top_band(c, x, Y(top), tw, band, 10)
+        rounded_top_band(c, x, Y(top), tw, 26, 10)
         c.setFillColor(accent_txt)
         c.setFont("Fredoka-SemiBold", 12)
         c.drawCentredString(x + tw / 2, Y(top + 17), week)
         c.setFillColor(DARK)
-        end = wrapped(c, title, "Inter-Bold", 10.5, x + 12, top + band + 20, tw - 24, page_h, 13.5)
+        end = wrapped(c, title, "Inter-Bold", 10.5, x + 12, top + 46, tw - 24, page_h, 13.5)
         c.setFillColor(MUTED)
-        wrapped(c, body, "Inter-Regular", 9.5, x + 12, end + 18, tw - 24, page_h, 13.5)
+        last = wrapped(c, body, "Inter-Regular", 9.5, x + 12, end + 18, tw - 24, page_h, 13.5)
+        assert last + 8 < top + th, f"{week} text runs past its card"
 
     # what's in the kit, 2 x 2 panels
+    kit_top = top + th + 26
     c.setFillColor(BLUE)
     c.setFont("Fredoka-SemiBold", 14)
-    c.drawString(LEFT, Y(470), "What's in your launch kit")
-    pw, ph, pg = (width - 14) / 2, 54, 12
+    c.drawString(LEFT, Y(kit_top), "What's in your launch kit")
+    pw, ph, pg = (width - 14) / 2, 44, 10
     for i, (title, desc, accent) in enumerate(KIT):
         x = LEFT + (i % 2) * (pw + 14)
-        t = 482 + (i // 2) * (ph + pg)
+        t = kit_top + 12 + (i // 2) * (ph + pg)
+        assert len(simpleSplit(desc, "Inter-Regular", 9, pw - 26)) == 1, desc
         c.setLineWidth(1)
         c.setStrokeColor(colors.HexColor("#E5E4E2"))
         c.setFillColor(colors.HexColor("#FAFAF9"))
@@ -117,26 +144,29 @@ def build_overlay(page_w, page_h):
         c.roundRect(x, Y(t + ph), 6, ph, 3, stroke=0, fill=1)
         c.setFillColor(DARK)
         c.setFont("Inter-Bold", 10)
-        c.drawString(x + 16, Y(t + 20), title)
+        c.drawString(x + 16, Y(t + 18), title)
         c.setFillColor(MUTED)
-        wrapped(c, desc, "Inter-Regular", 9, x + 16, t + 35, pw - 26, page_h, 12)
+        c.setFont("Inter-Regular", 9)
+        c.drawString(x + 16, Y(t + 32), desc)
 
     # why one visit
-    nt, nh = 620, 46
+    nt, nh = kit_top + 12 + 2 * ph + pg + 12, 40
     c.setFillColor(NOTE_FILL)
     c.setStrokeColor(NOTE_LINE)
     c.roundRect(LEFT, Y(nt + nh), width, nh, 8, stroke=1, fill=1)
     c.setFillColor(DARK)
     c.setFont("Inter-Bold", 9.5)
-    c.drawString(LEFT + 12, Y(nt + 18), "Why one visit?")
+    c.drawString(LEFT + 12, Y(nt + 16), "Why one visit?")
     c.setFont("Inter-Regular", 9.5)
-    c.drawString(LEFT + 89, Y(nt + 18), "Parents see their child sing and play in a real class,")
-    c.drawString(LEFT + 12, Y(nt + 33), "then get their questions answered right away. Busy families only come once.")
+    c.drawString(LEFT + 89, Y(nt + 16), "Parents see their child sing and play in a real class,")
+    c.drawString(LEFT + 12, Y(nt + 30), "then get their questions answered right away. Busy families only come once.")
 
+    closing = nt + nh + 16
+    assert closing <= COVER_BOTTOM - 2, f"content runs to {closing}"
     c.setFillColor(MUTED)
     c.setFont("Inter-Regular", 9.5)
-    c.drawCentredString(cx, Y(696), "Included with your Book 1 training as a founding teacher. "
-                                    "Start with 4 students and grow from there.")
+    c.drawCentredString(cx, Y(closing), "Included with your Book 1 training as a founding teacher. "
+                                        "Start with 4 students and grow from there.")
     c.showPage()
     c.save()
     buf.seek(0)
