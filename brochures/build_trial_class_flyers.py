@@ -36,7 +36,7 @@ INVITE = dict(
                           "Free, no commitment"], ORANGE, ORANGE_TXT),
     ],
     details_title="Trial class details",
-    fields=["Date", "Time", "Place", "Teacher", "Save a spot"],
+    fields=["Studio", "Date", "Time", "Place", "Teacher", "Save a spot"],
     closing="Spots are limited. Save yours today!",
     cards_first=True,
 )
@@ -54,7 +54,7 @@ REMINDER = dict(
                              "Tell us if your plans change"], ORANGE, ORANGE_TXT),
     ],
     details_title="Your trial class",
-    fields=["Date", "Time", "Place", "Contact"],
+    fields=["Studio", "Date", "Time", "Place", "Contact"],
     closing="Questions? Contact your teacher anytime.",
     cards_first=False,
 )
@@ -100,7 +100,7 @@ def draw_cards(c, page_h, top, cards):
 
 def draw_details(c, page_h, top, title, fields):
     width = RIGHT - LEFT
-    row = 38
+    row = 31
     h = 34 + len(fields) * row + 4
     c.setFillColor(NOTE_FILL)
     c.setStrokeColor(NOTE_LINE)
@@ -117,6 +117,10 @@ def draw_details(c, page_h, top, title, fields):
         c.drawString(LEFT + 16, page_h - y, f)
         c.setLineWidth(0.8)
         c.line(LEFT + 100, page_h - (y + 3), RIGHT - 16, page_h - (y + 3))
+        c.acroForm.textfield(name=f.lower().replace(" ", "_"), tooltip=f, x=LEFT + 100,
+                             y=page_h - (y + 3) + 2, width=RIGHT - 16 - (LEFT + 100), height=18,
+                             borderWidth=0, fillColor=colors.Color(1, 1, 1, alpha=0),
+                             textColor=DARK, fontName="Helvetica", fontSize=11, value="")
     return top + h
 
 
@@ -152,11 +156,28 @@ def build_overlay(page_w, page_h, spec):
     return PdfReader(buf).pages[0]
 
 
+def keep_form_fields(out, page, overlay):
+    """merge_page copies the typeable fields onto the page; register them as the form."""
+    from pypdf.generic import ArrayObject, BooleanObject, NameObject
+    from pypdf.generic import DictionaryObject
+    src = overlay.pdf.trailer["/Root"]["/AcroForm"].get_object()
+    fields = ArrayObject(x for x in page["/Annots"] if x.get_object().get("/FT") == "/Tx")
+    form = DictionaryObject({
+        NameObject("/Fields"): fields,
+        NameObject("/DA"): src["/DA"],
+        NameObject("/DR"): src["/DR"].get_object().clone(out),
+        NameObject("/NeedAppearances"): BooleanObject(True),
+    })
+    out._root_object[NameObject("/AcroForm")] = out._add_object(form)
+
+
 def build(spec):
     out = PdfWriter(clone_from=TEMPLATE)
     page = out.pages[0]
     strip_welcome_text(out, page)
-    page.merge_page(build_overlay(float(page.mediabox.width), float(page.mediabox.height), spec))
+    overlay = build_overlay(float(page.mediabox.width), float(page.mediabox.height), spec)
+    page.merge_page(overlay)
+    keep_form_fields(out, page, overlay)
     out.add_metadata({"/Title": spec["title"], "/Author": "MyMusicBox Academy"})
     path = os.path.join(HERE, spec["filename"])
     with open(path, "wb") as f:

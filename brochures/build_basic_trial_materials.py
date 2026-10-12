@@ -16,7 +16,11 @@ from reportlab.pdfbase import pdfmetrics
 from reportlab.pdfbase.ttfonts import TTFont
 from reportlab.pdfgen import canvas
 
-from build_trial_class_flyers import INVITE, REMINDER
+from build_trial_class_flyers import INVITE as _INVITE, REMINDER as _REMINDER
+
+# the plain version has its studio name line at the top, so drop the Studio row
+INVITE = dict(_INVITE, fields=[f for f in _INVITE["fields"] if f != "Studio"])
+REMINDER = dict(_REMINDER, fields=[f for f in _REMINDER["fields"] if f != "Studio"])
 
 HERE = os.path.dirname(os.path.abspath(__file__))
 OUT = os.path.join(HERE, "basic", "plain")

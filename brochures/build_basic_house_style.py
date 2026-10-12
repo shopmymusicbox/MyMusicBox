@@ -13,7 +13,7 @@ from reportlab.lib import colors
 from reportlab.lib.pagesizes import LETTER
 from reportlab.lib.styles import ParagraphStyle
 from reportlab.lib.units import inch
-from reportlab.platypus import (BaseDocTemplate, Frame, HRFlowable, PageTemplate, Paragraph,
+from reportlab.platypus import (BaseDocTemplate, Flowable, Frame, HRFlowable, PageTemplate, Paragraph,
                                 Spacer, Table, TableStyle)
 
 from build_brochures import (DARK, MUTED, BORDER, PANEL, bullet_line, plain_bullet_column)
@@ -24,19 +24,21 @@ LIB = "/usr/share/fonts/truetype/liberation"
 CERT_LINE = "Taught by a Book 1 Certified My Music Box Teacher"
 
 # one hue per page: (band color, light tint for the card header, text pairing)
+# Basic-level palette: colorful, but none of the My Music Box brand colors, which are
+# reserved for Ambassador Studios. One hue per page: (band, light tint, text pairing).
 HUES = {
-    "purple": ("#B683BA", "#E0CBE2", "#542E57"),
-    "teal": ("#4AC3D4", "#D5F1F5", "#15646F"),
-    "green": ("#C1D83F", "#EEF5CB", "#647312"),
-    "orange": ("#FAD294", "#FDEFD8", "#845100"),
+    "indigo": ("#4C5FD5", "#E7EAFB", "#2B3A9E"),
+    "rose": ("#E0617F", "#FBE5EB", "#9B2C48"),
+    "tangerine": ("#EE8A3C", "#FDEBDC", "#9A4A0B"),
 }
+NAVY = "#1F2A44"  # headlines on every page, so the accent color stays a highlight
 
 PAGE_W, PAGE_H = LETTER
 MARGIN = 0.7 * inch
 BAND_H = 0.18 * inch
 
 INVITE = dict(
-    filename="Trial_Class_Invite_Flyer.pdf", hue="purple",
+    filename="Trial_Class_Invite_Flyer.pdf", hue="indigo", eyebrow="Free trial class",
     title="Come try a group piano class!",
     subtitle="A free 30 minute trial class for children ages 4 to 7.",
     left_head="What to expect",
@@ -50,7 +52,7 @@ INVITE = dict(
 )
 
 REMINDER = dict(
-    filename="Trial_Class_Reminder_Flyer.pdf", hue="teal",
+    filename="Trial_Class_Reminder_Flyer.pdf", hue="rose", eyebrow="Trial class reminder",
     title="See you at the trial class!",
     subtitle="We can't wait to make music with your child.",
     left_head="Your visit",
@@ -65,6 +67,32 @@ REMINDER = dict(
 
 # ------------------------------------ flyers ------------------------------------
 
+CLEAR = colors.Color(1, 1, 1, alpha=0)
+FIELD_TEXT = colors.HexColor("#3A3A3A")
+
+
+def text_field(c, name, x, y, width, height, size=11):
+    """A typeable PDF field with no box, so the printed page just shows the line."""
+    c.acroForm.textfield(name=name, tooltip=name.replace("_", " ").title(), x=x, y=y,
+                         width=width, height=height, borderWidth=0, fillColor=CLEAR,
+                         textColor=FIELD_TEXT, fontName="Helvetica", fontSize=size, value="")
+
+
+class WriteIn(Flowable):
+    """A write-in line that is also a typeable field."""
+
+    def __init__(self, name, width, height=22):
+        super().__init__()
+        self.name, self.width, self.height = name, width, height
+
+    def draw(self):
+        self.canv.setStrokeColor(colors.HexColor("#C9C7C4"))
+        self.canv.setLineWidth(0.8)
+        self.canv.line(0, 0, self.width, 0)
+        # form fields use page coordinates, not the table cell's local ones
+        x, y = self.canv.absolutePosition(0, 2)
+        text_field(self.canv, self.name, x, y, self.width, self.height - 2)
+
 def on_page_for(band):
     def on_page(c, doc):
         c.saveState()
@@ -75,6 +103,7 @@ def on_page_for(band):
         c.setStrokeColor(BORDER)
         c.setLineWidth(0.8)
         c.line(PAGE_W - MARGIN - 2.4 * inch, y, PAGE_W - MARGIN, y)
+        text_field(c, "studio_name", PAGE_W - MARGIN - 2.4 * inch, y + 2, 2.4 * inch, 20, size=12)
         c.setFont('Sans', 8.5)
         c.setFillColor(MUTED)
         c.drawRightString(PAGE_W - MARGIN, y - 11, "Your studio name")
@@ -96,11 +125,11 @@ def details_card(head, fields, sentence, tint, txt, width):
         ("BOTTOMPADDING", (0, 0), (-1, -1), 9),
     ]))
     label = ParagraphStyle("l", fontName="Sans-Bold", fontSize=10.8, leading=14, textColor=DARK)
-    rows = [[Paragraph(f, label), ""] for f in fields]
+    field_w = width - 1.0 * inch - 24
+    rows = [[Paragraph(f, label), WriteIn(f.lower().replace(" ", "_"), field_w)] for f in fields]
     lines = Table(rows, colWidths=[1.0 * inch, width - 1.0 * inch - 24], rowHeights=34)
     lines.setStyle(TableStyle([
         ("VALIGN", (0, 0), (-1, -1), "BOTTOM"),
-        ("LINEBELOW", (1, 0), (1, -1), 0.8, colors.HexColor("#C9C7C4")),
         ("LEFTPADDING", (0, 0), (-1, -1), 0), ("RIGHTPADDING", (0, 0), (-1, -1), 0),
         ("BOTTOMPADDING", (0, 0), (-1, -1), 3),
     ]))
@@ -122,14 +151,28 @@ def details_card(head, fields, sentence, tint, txt, width):
     return outer
 
 
+class AccentBar(Flowable):
+    def __init__(self, color, width=44, height=4):
+        super().__init__()
+        self.color, self.width, self.height = color, width, height
+
+    def draw(self):
+        self.canv.setFillColor(self.color)
+        self.canv.roundRect(0, 0, self.width, self.height, 2, stroke=0, fill=1)
+
+
 def flyer(spec):
     band, tint, txt = (colors.HexColor(h) for h in HUES[spec["hue"]])
     story = [
         Spacer(1, 0.3 * inch),
-        Paragraph(spec["title"], ParagraphStyle("t", fontName="Sans-Bold", fontSize=23, leading=27,
-                                                textColor=DARK, spaceAfter=6)),
+        Paragraph(spec["eyebrow"], ParagraphStyle("e", fontName="Sans-Bold", fontSize=11, leading=14,
+                                                  textColor=txt, spaceAfter=6)),
+        Paragraph(spec["title"], ParagraphStyle("t", fontName="Sans-Bold", fontSize=25, leading=29,
+                                                textColor=colors.HexColor(NAVY), spaceAfter=8)),
+        AccentBar(band),
+        Spacer(1, 10),
         Paragraph(spec["subtitle"], ParagraphStyle("s", fontName="Sans", fontSize=11.5, leading=16,
-                                                   textColor=MUTED, spaceAfter=22)),
+                                                   textColor=MUTED, spaceAfter=24)),
     ]
     LEFT_W, RIGHT_W, GAP = 2.5 * inch, 4.1 * inch, 20
     left = plain_bullet_column(spec["left_head"], spec["left_items"], spec["left_footer"], txt, LEFT_W)
@@ -171,18 +214,20 @@ def page(hue):
     band, tint, txt = HUES[hue]
     im = Image.new("RGB", (W, H), "white")
     d = ImageDraw.Draw(im)
-    d.rectangle((0, 0, W, 34), fill=band)
+    d.ellipse((W - 300, -260, W + 260, 300), fill=tint)  # soft corner shape
+    d.rectangle((0, 0, W, 18), fill=band)
     d.line((SIDE, H - 118, W - SIDE, H - 118), fill=RULE, width=2)
     d.text((SIDE, H - 88), CERT_LINE, font=pf(False, 28), fill=GRAY)
     return im, d, (band, tint, txt)
 
 
-def headline(d, y, lines, size=76):
+def headline(d, y, lines, accent, size=76):
     f = pf(True, size)
     for ln in lines:
-        d.text((SIDE, y), ln, font=f, fill=INK)
+        d.text((SIDE, y), ln, font=f, fill=NAVY)
         y += int(size * 1.18)
-    return y
+    d.rounded_rectangle((SIDE, y + 22, SIDE + 88, y + 32), radius=5, fill=accent)
+    return y + 36
 
 
 def dot_list(d, y, items, txt, size=36, gap=22):
@@ -200,14 +245,14 @@ def card(d, y, head, body_lines, colors_, size=34):
     band, tint, txt = colors_
     x1, x2 = SIDE, W - SIDE
     hh = 84
-    body_h = 36 + len(body_lines) * (size + 18) + 18
-    d.rectangle((x1, y, x2, y + hh + body_h), fill=PANEL_HEX, outline=RULE, width=2)
-    d.rectangle((x1 + 1, y + 1, x2 - 1, y + hh), fill=tint)
-    d.text((x1 + 30, y + (hh - 40) / 2), head, font=pf(True, 40), fill=txt)
-    ty = y + hh + 36
+    body_h = 14 + len(body_lines) * (size + 18) + 22
+    d.rounded_rectangle((x1, y, x2, y + hh + body_h), radius=28, fill=tint)
+    d.rounded_rectangle((x1, y, x1 + 12, y + hh + body_h), radius=6, fill=band)
+    d.text((x1 + 40, y + (hh - 40) / 2 + 6), head, font=pf(True, 40), fill=txt)
+    ty = y + hh + 14
     for bold, s in body_lines:
-        d.text((x1 + 30, ty), s, font=pf(bold, size), fill=INK)
-        assert x1 + 30 + tw(d, s, pf(bold, size)) < x2 - 24, s
+        d.text((x1 + 40, ty), s, font=pf(bold, size), fill=NAVY if bold else INK)
+        assert x1 + 40 + tw(d, s, pf(bold, size)) < x2 - 24, s
         ty += size + 18
     return y + hh + body_h
 
@@ -222,10 +267,10 @@ def centered_post(fn):
 
 
 def ig_invite(y0=140):
-    im, d, c = page("purple")
+    im, d, c = page("indigo")
     y = y0
     d.text((SIDE, y), "Free trial class", font=pf(True, 34), fill=c[2])
-    y = headline(d, y + 60, ["Come try a", "group piano class!"])
+    y = headline(d, y + 60, ["Come try a", "group piano class!"], c[0])
     d.text((SIDE, y + 10), "For children ages 4 to 7. 30 minutes.", font=pf(False, 36), fill=GRAY)
     y = dot_list(d, y + 100, ["Sing and move to music", "Play first notes on the piano",
                               "Make music with new friends"], c[2])
@@ -235,10 +280,10 @@ def ig_invite(y0=140):
 
 
 def ig_what_happens(y0=140):
-    im, d, c = page("green")
+    im, d, c = page("tangerine")
     y = y0
     d.text((SIDE, y), "Free trial class", font=pf(True, 34), fill=c[2])
-    y = headline(d, y + 60, ["What happens in", "a trial class?"])
+    y = headline(d, y + 60, ["What happens in", "a trial class?"], c[0])
     y = card(d, y + 40, "In 30 minutes, your child will", [
         (True, "1.  Sing first"), (False, "      Sing the song before playing it."),
         (True, "2.  Move to the music"), (False, "      Feel the rhythm in the body."),
@@ -249,10 +294,10 @@ def ig_what_happens(y0=140):
 
 
 def ig_last_spots(y0=140):
-    im, d, c = page("orange")
+    im, d, c = page("rose")
     y = y0
     d.text((SIDE, y), "Free trial class", font=pf(True, 34), fill=c[2])
-    y = headline(d, y + 60, ["Only a few", "spots left!"], size=96)
+    y = headline(d, y + 60, ["Only a few", "spots left!"], c[0], size=96)
     d.text((SIDE, y + 10), "Group piano for children ages 4 to 7.", font=pf(False, 36), fill=GRAY)
     y = dot_list(d, y + 100, ["30 minute trial class", "Up to 8 children", "Parents stay and watch"], c[2])
     y = card(d, y + 34, "Message us today", [(True, "Spots go to the first families"),
