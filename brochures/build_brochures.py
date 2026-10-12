@@ -317,7 +317,7 @@ def payback_brochure(region, r):
 
     # note box
     y -= 10
-    note_h = 38
+    note_h = 26
     c.setFillColor(GREEN_TINT)
     c.setStrokeColor(GREEN)
     c.setLineWidth(1)
@@ -329,7 +329,6 @@ def payback_brochure(region, r):
     c.setFont('Sans', 10)
     c.drawString(left + 44, y + 2, "Examples only. You set your own tuition. "
                                    "First year of your annual license is free, then $499 a year.")
-    c.drawString(left + 44, y - 11, "Each student needs a $120 book set for each book.")
 
     c.showPage()
     c.save()

@@ -183,17 +183,17 @@ def build_overlay(page_w, page_h, r):
         y_top += 23
 
     # note
-    nt, nh = 666, 42
+    nt, nh = 670, 28
     c.setFillColor(NOTE_FILL)
     c.setStrokeColor(NOTE_LINE)
     c.setLineWidth(1)
     c.roundRect(LEFT, Y(nt + nh), width, nh, 8, stroke=1, fill=1)
     c.setFillColor(DARK)
     c.setFont("Inter-Bold", 9)
-    c.drawString(LEFT + 10, Y(nt + 16), "Examples only.")
+    c.drawString(LEFT + 10, Y(nt + 17.5), "Examples only.")
     c.setFont("Inter-Regular", 9)
-    c.drawString(LEFT + 80, Y(nt + 16), "You set your own tuition. First year of your annual license is free,")
-    c.drawString(LEFT + 10, Y(nt + 31), "then $499 a year. Each student needs a $120 book set for each book.")
+    c.drawString(LEFT + 80, Y(nt + 17.5), "You set your own tuition. First year of your annual license is free, "
+                                          "then $499 a year.")
 
     c.showPage()
     c.save()
