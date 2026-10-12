@@ -18,7 +18,18 @@ from reportlab.platypus import (BaseDocTemplate, Flowable, Frame, HRFlowable, Pa
 
 from build_brochures import (DARK, MUTED, BORDER, PANEL, bullet_line, plain_bullet_column)
 
+from reportlab.pdfbase import pdfmetrics
+from reportlab.pdfbase.ttfonts import TTFont
+
 HERE = os.path.dirname(os.path.abspath(__file__))
+FONTS = os.path.join(HERE, "fonts")
+# Nunito: rounded and friendly, and not the My Music Box brand font (Fredoka)
+pdfmetrics.registerFont(TTFont("Sans", os.path.join(FONTS, "Nunito-Regular.ttf")))
+pdfmetrics.registerFont(TTFont("Sans-Bold", os.path.join(FONTS, "Nunito-Bold.ttf")))
+pdfmetrics.registerFont(TTFont("Sans-XBold", os.path.join(FONTS, "Nunito-ExtraBold.ttf")))
+NOTE_FONT = "/usr/share/fonts/truetype/dejavu/DejaVuSans.ttf"
+pdfmetrics.registerFont(TTFont("Notes", NOTE_FONT))
+NOTES = ["\u266A", "\u266B", "\u2669", "\u266C"]
 OUT = os.path.join(HERE, "basic")
 LIB = "/usr/share/fonts/truetype/liberation"
 CERT_LINE = "Taught by a Book 1 Certified My Music Box Teacher"
@@ -65,6 +76,23 @@ REMINDER = dict(
 )
 
 
+# ----------------------------------- keyboard -----------------------------------
+
+BLACK_AFTER = {0, 1, 3, 4, 5}  # black key after C, D, F, G, A
+CHORD = set()  # no highlighted keys: a plain keyboard
+
+
+def keyboard_keys(n_white, x, y_top, width, height):
+    """Yield ('white'|'black', index, x, y_top, w, h) for a flat keyboard drawing."""
+    kw = width / n_white
+    for i in range(n_white):
+        yield "white", i, x + i * kw, y_top, kw, height
+    for i in range(n_white - 1):
+        if i % 7 in BLACK_AFTER:
+            bw = kw * 0.58
+            yield "black", i, x + (i + 1) * kw - bw / 2, y_top, bw, height * 0.62
+
+
 # ------------------------------------ flyers ------------------------------------
 
 CLEAR = colors.Color(1, 1, 1, alpha=0)
@@ -93,7 +121,7 @@ class WriteIn(Flowable):
         x, y = self.canv.absolutePosition(0, 2)
         text_field(self.canv, self.name, x, y, self.width, self.height - 2)
 
-def on_page_for(band):
+def on_page_for(band, tint, txt):
     def on_page(c, doc):
         c.saveState()
         c.setFillColor(band)
@@ -112,8 +140,53 @@ def on_page_for(band):
         c.line(MARGIN, 0.55 * inch, PAGE_W - MARGIN, 0.55 * inch)
         c.setFont('Sans', 9)
         c.drawString(MARGIN, 0.38 * inch, CERT_LINE)
+        draw_pdf_notes(c, band, txt)
+        draw_pdf_keyboard(c, MARGIN, 0.75 * inch + 0.45 * inch, PAGE_W - 2 * MARGIN, 1.15 * inch,
+                          band, tint, txt)
         c.restoreState()
     return on_page
+
+
+# (x, y from the bottom, size, glyph, use accent text color, angle)
+PDF_NOTES = [
+    (226, 190, 22, 0, False, -8), (282, 212, 30, 1, True, 6), (338, 236, 24, 2, False, -6),
+    (398, 252, 34, 1, False, 10), (462, 228, 24, 0, True, -10), (520, 256, 30, 3, False, 4),
+    (470, 676, 30, 1, False, 8), (528, 640, 22, 0, True, -8),
+]
+
+
+CARD_BOTTOM_MIN = 318  # the details cards end at or above this height (from the bottom)
+
+
+def draw_pdf_notes(c, band, txt):
+    for x, y, size, g, dark, angle in PDF_NOTES:
+        assert y + size < CARD_BOTTOM_MIN or y > 600, f"note at {x},{y} would touch the card"
+        c.saveState()
+        c.translate(x, y)
+        c.rotate(angle)
+        c.setFillColor(txt if dark else band)
+        c.setFont("Notes", size)
+        c.drawString(0, 0, NOTES[g])
+        c.restoreState()
+
+
+def draw_pdf_keyboard(c, x, y_bottom, width, height, band, tint, txt):
+    navy = colors.HexColor(NAVY)
+    top = y_bottom + height
+    for kind, i, kx, _, kw, kh in keyboard_keys(21, x, top, width, height):
+        if kind == "white":
+            c.setFillColor(tint if i in CHORD else colors.white)
+            c.setStrokeColor(colors.HexColor("#CBD0DC"))
+            c.setLineWidth(0.8)
+            c.roundRect(kx, y_bottom, kw, height, 3, stroke=1, fill=1)
+            if i in CHORD:
+                c.setFillColor(band)
+                c.circle(kx + kw / 2, y_bottom + 12, 4.5, stroke=0, fill=1)
+        else:
+            c.setFillColor(navy)
+            c.roundRect(kx, top - kh, kw, kh, 2.5, stroke=0, fill=1)
+    c.setFillColor(band)
+    c.rect(x, top, width, 4, stroke=0, fill=1)
 
 
 def details_card(head, fields, sentence, tint, txt, width):
@@ -167,7 +240,7 @@ def flyer(spec):
         Spacer(1, 0.3 * inch),
         Paragraph(spec["eyebrow"], ParagraphStyle("e", fontName="Sans-Bold", fontSize=11, leading=14,
                                                   textColor=txt, spaceAfter=6)),
-        Paragraph(spec["title"], ParagraphStyle("t", fontName="Sans-Bold", fontSize=25, leading=29,
+        Paragraph(spec["title"], ParagraphStyle("t", fontName="Sans-XBold", fontSize=26, leading=29,
                                                 textColor=colors.HexColor(NAVY), spaceAfter=8)),
         AccentBar(band),
         Spacer(1, 10),
@@ -190,7 +263,7 @@ def flyer(spec):
     doc = BaseDocTemplate(path, pagesize=LETTER, leftMargin=MARGIN, rightMargin=MARGIN,
                           topMargin=MARGIN + BAND_H, bottomMargin=0.75 * inch, title=spec["title"])
     frame = Frame(MARGIN, 0.75 * inch, PAGE_W - 2 * MARGIN, PAGE_H - MARGIN - BAND_H - 0.75 * inch, id="c")
-    doc.addPageTemplates([PageTemplate(id="c", frames=[frame], onPage=on_page_for(band))])
+    doc.addPageTemplates([PageTemplate(id="c", frames=[frame], onPage=on_page_for(band, tint, txt))])
     doc.build(story)
     return path
 
@@ -202,8 +275,22 @@ INK, GRAY, RULE, PANEL_HEX = "#3A3A3A", "#6B6B6B", "#E5E4E2", "#F6F5F4"
 SIDE = 84
 
 
-def pf(bold, size):
-    return ImageFont.truetype(f"{LIB}/LiberationSans-{'Bold' if bold else 'Regular'}.ttf", size)
+def pf(bold, size, xbold=False):
+    name = "Nunito-ExtraBold" if xbold else ("Nunito-Bold" if bold else "Nunito-Regular")
+    return ImageFont.truetype(os.path.join(FONTS, f"{name}.ttf"), size)
+
+
+def note(im, x, y, size, glyph, color, angle):
+    f = ImageFont.truetype(NOTE_FONT, size)
+    layer = Image.new("L", (size * 2, size * 2), 0)
+    ImageDraw.Draw(layer).text((size // 2, size // 4), NOTES[glyph], font=f, fill=255)
+    layer = layer.rotate(angle, resample=Image.BICUBIC, expand=False)
+    im.paste(Image.new("RGB", layer.size, color), (int(x), int(y)), layer)
+
+
+# (x, y, size, glyph, use accent text color, angle): around the corner shape and the footer
+PNG_NOTES = [(760, 52, 64, 1, False, 8), (868, 120, 88, 0, True, -10), (980, 40, 56, 2, False, 12),
+             (930, H - 120, 48, 1, False, -6)]
 
 
 def tw(d, s, f):
@@ -218,11 +305,31 @@ def page(hue):
     d.rectangle((0, 0, W, 18), fill=band)
     d.line((SIDE, H - 118, W - SIDE, H - 118), fill=RULE, width=2)
     d.text((SIDE, H - 88), CERT_LINE, font=pf(False, 28), fill=GRAY)
+    for x, y, size, g, dark, angle in PNG_NOTES:
+        note(im, x, y, size, g, txt if dark else band, angle)
+    draw_png_keyboard(d, SIDE, KEYS_TOP, W - 2 * SIDE, KEYS_H, band, tint)
     return im, d, (band, tint, txt)
 
 
+KEYS_H = 120
+KEYS_TOP = H - 118 - 34 - KEYS_H
+
+
+def draw_png_keyboard(d, x, top, width, height, band, tint):
+    d.rectangle((x, top - 8, x + width, top), fill=band)
+    for kind, i, kx, ky, kw, kh in keyboard_keys(14, x, top, width, height):
+        if kind == "white":
+            d.rounded_rectangle((kx, ky, kx + kw, ky + kh), radius=8,
+                                fill=tint if i in CHORD else "white", outline="#CBD0DC", width=2)
+            if i in CHORD:
+                cx, cy = kx + kw / 2, ky + kh - 26
+                d.ellipse((cx - 10, cy - 10, cx + 10, cy + 10), fill=band)
+        else:
+            d.rounded_rectangle((kx, ky, kx + kw, ky + kh), radius=6, fill=NAVY)
+
+
 def headline(d, y, lines, accent, size=76):
-    f = pf(True, size)
+    f = pf(True, size, xbold=True)
     for ln in lines:
         d.text((SIDE, y), ln, font=f, fill=NAVY)
         y += int(size * 1.18)
@@ -260,7 +367,7 @@ def card(d, y, head, body_lines, colors_, size=34):
 def centered_post(fn):
     """Measure the post, then redraw it centered between the top band and the footer."""
     _, end = fn()
-    bottom = H - 160
+    bottom = KEYS_TOP - 36
     assert end <= bottom, f"{fn.__name__} runs into the footer"
     im, _ = fn(140 + (bottom - end) / 2)
     return im
