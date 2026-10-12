@@ -147,27 +147,61 @@ def on_page_for(band, tint, txt):
     return on_page
 
 
-# (x, y from the bottom, size, glyph, use accent text color, angle)
+# Chunky notes, the same shape as on the posts.
+# (head center x, head center y from the bottom, size, beamed pair?, use accent text color, angle)
 PDF_NOTES = [
-    (226, 190, 22, 0, False, -8), (282, 212, 30, 1, True, 6), (338, 236, 24, 2, False, -6),
-    (398, 252, 34, 1, False, 10), (462, 228, 24, 0, True, -10), (520, 256, 30, 3, False, 4),
-    (470, 676, 30, 1, False, 8), (528, 640, 22, 0, True, -8),
+    (232, 194, 9, False, False, -8), (290, 212, 11, False, True, 6), (350, 228, 12, True, False, -4),
+    (448, 214, 10, False, True, 8), (508, 238, 11, False, False, -6),
+    (478, 664, 12, False, False, 8), (534, 690, 9, False, True, -8),
 ]
-
 
 CARD_BOTTOM_MIN = 318  # the details cards end at or above this height (from the bottom)
 
 
+def draw_cute_note_pdf(c, cx, cy, s, beamed, color, angle):
+    c.saveState()
+    c.translate(cx, cy)
+    c.rotate(angle)
+    c.setFillColor(color)
+    c.setStrokeColor(color)
+
+    def head(hx, hy):
+        c.ellipse(hx - 0.75 * s, hy - 0.6 * s, hx + 0.75 * s, hy + 0.6 * s, stroke=0, fill=1)
+
+    def stem(x, y_bot, y_top):
+        w = 0.28 * s
+        c.roundRect(x - w / 2, y_bot, w, y_top - y_bot, w / 2, stroke=0, fill=1)
+
+    sx1, top1 = 0.62 * s, 2.2 * s
+    stem(sx1, 0.1 * s, top1)
+    if beamed:
+        hx2, hy2 = 2.0 * s, 0.35 * s
+        sx2, top2 = hx2 + 0.62 * s, top1 + 0.35 * s
+        stem(sx2, hy2 + 0.1 * s, top2)
+        p = c.beginPath()
+        bw = 0.42 * s
+        p.moveTo(sx1 - 0.11 * s, top1)
+        p.lineTo(sx2 + 0.11 * s, top2)
+        p.lineTo(sx2 + 0.11 * s, top2 - bw)
+        p.lineTo(sx1 - 0.11 * s, top1 - bw)
+        p.close()
+        c.drawPath(p, stroke=0, fill=1)
+        head(hx2, hy2)
+    else:  # curly flag hanging from the stem top
+        c.setLineWidth(0.3 * s)
+        c.setLineCap(1)
+        p = c.beginPath()
+        p.moveTo(sx1, top1)
+        p.curveTo(sx1 + 0.9 * s, top1 - 0.15 * s, sx1 + 0.95 * s, top1 - 0.9 * s, sx1 + 0.45 * s, top1 - 1.25 * s)
+        c.drawPath(p, stroke=1, fill=0)
+    head(0, 0)
+    c.restoreState()
+
+
 def draw_pdf_notes(c, band, txt):
-    for x, y, size, g, dark, angle in PDF_NOTES:
-        assert y + size < CARD_BOTTOM_MIN or y > 600, f"note at {x},{y} would touch the card"
-        c.saveState()
-        c.translate(x, y)
-        c.rotate(angle)
-        c.setFillColor(txt if dark else band)
-        c.setFont("Notes", size)
-        c.drawString(0, 0, NOTES[g])
-        c.restoreState()
+    for x, y, s, beamed, dark, angle in PDF_NOTES:
+        assert y + 2.8 * s < CARD_BOTTOM_MIN or y > 600, f"note at {x},{y} would touch the card"
+        draw_cute_note_pdf(c, x, y, s, beamed, txt if dark else band, angle)
 
 
 def draw_pdf_keyboard(c, x, y_bottom, width, height, band, tint, txt):
