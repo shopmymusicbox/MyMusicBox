@@ -165,63 +165,176 @@ def build(filename, title, subtitle, left, right, closing, band_color):
 
 # ------------------------------ payback brochures ------------------------------
 
+from reportlab.pdfgen import canvas as rl_canvas
+
 REGIONS = {
-    "Region1": dict(standard=2800, founding=2200, private="$60 to $80", per_student=30),
-    "Region2": dict(standard=2000, founding=1600, private="$25 to $45", per_student=15),
+    "Region1": dict(standard=2800, founding=2200, lesson=(30, 45), private="$60 to $80"),
+    "Region2": dict(standard=2000, founding=1600, lesson=(15, 25), private="$25 to $45"),
 }
-WEEKS_PER_MONTH = 4  # conservative; a month averages about 4.3 weeks
+LESSONS_PER_MONTH = 4
+GROUP_SIZES = [(4, PURPLE, PURPLE_TXT), (6, GREEN, GREEN_TXT), (8, ORANGE, ORANGE_TXT)]
+LAVENDER_TINT = colors.HexColor('#F1E8F2')
+GREEN_TINT = colors.HexColor('#EEF5CB')
+ORANGE_TINT = colors.HexColor('#FDEFD8')
+TINTS = [LAVENDER_TINT, GREEN_TINT, ORANGE_TINT]
+TRACK = colors.HexColor('#ECEBEA')
 
 
-def months_to_payback(price, monthly):
-    m = price / monthly
-    if m < 2:
-        return "under 2 months"
-    return f"about {round(m)} months"
+def tile(c, x, y, w, h, accent, accent_txt, big, small):
+    c.setFillColor(colors.white)
+    c.setStrokeColor(BORDER)
+    c.setLineWidth(1)
+    c.rect(x, y, w, h, stroke=1, fill=1)
+    c.setFillColor(accent)
+    c.rect(x, y + h - 6, w, 6, stroke=0, fill=1)
+    c.setFillColor(accent_txt)
+    c.setFont('Sans-Bold', 30)
+    c.drawCentredString(x + w / 2, y + h * 0.45, big)
+    c.setFillColor(MUTED)
+    c.setFont('Sans', 10.5)
+    c.drawCentredString(x + w / 2, y + 14, small)
 
 
 def payback_brochure(region, r):
-    p, fee = r["per_student"], r["founding"]
-    scenarios = []
-    for classes, students in [(1, 4), (1, 6), (2, 6)]:
-        monthly = classes * students * p * WEEKS_PER_MONTH
-        label = "class" if classes == 1 else "classes"
-        scenarios.append(
-            f"{classes} weekly {label} of {students}: ${monthly:,}/month, "
-            f"paid back in {months_to_payback(fee, monthly)}")
-    group_hour = 4 * p
+    lo, hi = r["lesson"]
+    fee = r["founding"]
+    path = os.path.join(OUT_DIR, f"MyMusicBox_Training_Payback_{region}.pdf")
+    c = rl_canvas.Canvas(path, pagesize=LETTER)
+    c.setTitle("MyMusicBox Academy")
+    c.setAuthor("MyMusicBox Academy")
+    make_on_page(PURPLE)(c, None)
 
-    left = (
-        "Your investment",
-        [f"Book 1 training: ${fee:,} founding price (standard ${r['standard']:,})",
-         "Annual license: first year free, then $499/year",
-         "Payment plans available at checkout",
-         "Teach as soon as you are certified on Book 1",
-         "Group classes of 4 to 8 students"],
-        "Spread your training over monthly payments, so your first group class "
-        "starts paying you back before you finish paying.",
-        PURPLE_TXT,
-    )
-    right = (
-        "How fast your training pays back",
-        [f"1 private hour: {r['private']}",
-         f"1 group hour with 4 students: ${group_hour}",
-         *scenarios],
-        [f"These examples assume each student pays ${p} for a one hour group class, "
-         "about half of a private lesson or less, so families save while you earn more per hour.",
-         "Book 1 runs about 22 weeks with your students. Every new group you open "
-         "brings your payback date closer."],
-        PURPLE1, PURPLE1_TXT,
-    )
-    closing = [
-        "Examples only. You set your own tuition and schedule. Monthly figures use 4 weeks per month "
-        "and do not include the $120 student book set, which each student needs.",
-        "From year two, the $499 annual license works out to about $42 a month.",
+    left, right = MARGIN, PAGE_W - MARGIN
+    width = right - left
+    y = PAGE_H - BAND_H - 0.75 * inch
+
+    c.setFillColor(ORANGE_TXT)
+    c.setFont('Sans-Bold', 13)
+    c.drawString(left, y, "The return")
+    y -= 30
+    c.setFillColor(DARK)
+    c.setFont('Sans-Bold', 25)
+    c.drawString(left, y, "What does this look like in your studio?")
+    y -= 20
+    c.setFillColor(MUTED)
+    c.setFont('Sans', 11.5)
+    c.drawString(left, y, f"Your Book 1 training: ${fee:,} founding price. "
+                          "Payment plan available at checkout.")
+
+    # stat tiles
+    monthly = {n: (n * lo * LESSONS_PER_MONTH, n * hi * LESSONS_PER_MONTH) for n, _, _ in GROUP_SIZES}
+    fastest = fee / monthly[8][1]
+    slowest = fee / monthly[4][0]
+    gap = 14
+    tw, th = (width - 2 * gap) / 3, 96
+    y -= 22 + th
+    tiles = [
+        (PURPLE, PURPLE_TXT, "4 to 8", "students per group"),
+        (GREEN, GREEN_TXT, f"${lo * 4}-${hi * 4}", "per student per month"),
+        (ORANGE, ORANGE_TXT, f"{max(1, round(fastest))}-{round(slowest + 0.49)} mo", "to earn your training back"),
     ]
-    return build(f"MyMusicBox_Training_Payback_{region}.pdf",
-                 "How fast your training pays for itself",
-                 "One hour, more students. Here is the group class math for a certified "
-                 "My Music Box teacher.",
-                 left, right, closing, PURPLE)
+    for i, (a, at, big, small) in enumerate(tiles):
+        tile(c, left + i * (tw + gap), y, tw, th, a, at, big, small)
+
+    # range chart
+    y -= 40
+    c.setFillColor(DARK)
+    c.setFont('Sans-Bold', 14)
+    c.drawString(left, y, "Monthly income by group size")
+    y -= 16
+    c.setFillColor(MUTED)
+    c.setFont('Sans', 10.3)
+    c.drawString(left, y, f"One weekly class, 4 lessons a month, ${lo} to ${hi} per student per lesson")
+
+    label_w, value_w = 1.3 * inch, 1.55 * inch
+    bar_x = left + label_w
+    bar_w = width - label_w - value_w - 10
+    max_val = monthly[8][1]
+    bar_h = 18
+    y -= 46
+    for (n, accent, accent_txt), tint in zip(GROUP_SIZES, TINTS):
+        low, high = monthly[n]
+        c.setFillColor(accent)
+        c.circle(left + 7, y + bar_h / 2, 6, stroke=0, fill=1)
+        c.setFillColor(DARK)
+        c.setFont('Sans-Bold', 12)
+        c.drawString(left + 20, y + 5, f"{n} students")
+        c.setFillColor(TRACK)
+        c.rect(bar_x, y, bar_w, bar_h, stroke=0, fill=1)
+        lx = bar_x + bar_w * low / max_val
+        hx = bar_x + bar_w * high / max_val
+        c.setFillColor(tint)
+        c.rect(bar_x, y, lx - bar_x, bar_h, stroke=0, fill=1)
+        c.setFillColor(accent)
+        c.rect(lx, y, hx - lx, bar_h, stroke=0, fill=1)
+        c.setFillColor(MUTED)
+        c.setFont('Sans', 9)
+        c.drawCentredString(lx, y + bar_h + 4, f"${low:,}/mo")
+        c.setFillColor(accent_txt)
+        c.setFont('Sans-Bold', 14)
+        c.drawString(bar_x + bar_w + 10, y + 7, f"${high:,}/mo")
+        c.setFillColor(MUTED)
+        c.setFont('Sans', 9)
+        c.drawString(bar_x + bar_w + 10, y - 5, f"${low * 12:,} to ${high * 12:,}/yr")
+        y -= 50
+
+    # legend
+    y += 18
+    c.setFillColor(TRACK)
+    c.rect(bar_x, y, 14, 9, stroke=0, fill=1)
+    c.setFillColor(MUTED)
+    c.setFont('Sans', 9)
+    c.drawString(bar_x + 19, y + 1, f"at ${lo} per student")
+    c.setFillColor(MUTED)
+    c.rect(bar_x + 130, y, 14, 9, stroke=0, fill=1)
+    c.setFillColor(MUTED)
+    c.drawString(bar_x + 149, y + 1, f"at ${hi} per student")
+
+    # payback bars: months to earn the training back
+    y -= 44
+    c.setFillColor(DARK)
+    c.setFont('Sans-Bold', 14)
+    c.drawString(left, y, "Months to earn your training back")
+    y -= 16
+    c.setFillColor(MUTED)
+    c.setFont('Sans', 10.3)
+    c.drawString(left, y, f"${fee:,} training, at the middle of the price range")
+    y -= 38
+    mid = (lo + hi) / 2
+    max_months = fee / (4 * mid * LESSONS_PER_MONTH)
+    for n, accent, accent_txt in GROUP_SIZES:
+        months = fee / (n * mid * LESSONS_PER_MONTH)
+        c.setFillColor(DARK)
+        c.setFont('Sans-Bold', 12)
+        c.drawString(left + 20, y + 5, f"{n} students")
+        c.setFillColor(accent)
+        c.circle(left + 7, y + bar_h / 2, 6, stroke=0, fill=1)
+        c.rect(bar_x, y, bar_w * months / max_months, bar_h, stroke=0, fill=1)
+        c.setFillColor(accent_txt)
+        c.setFont('Sans-Bold', 14)
+        c.drawString(bar_x + bar_w * months / max_months + 10, y + 4, f"{months:.1f} months")
+        y -= 32
+
+    # note box
+    y -= 10
+    note_h = 38
+    c.setFillColor(GREEN_TINT)
+    c.setStrokeColor(GREEN)
+    c.setLineWidth(1)
+    c.rect(left, y - note_h + 18, width, note_h, stroke=1, fill=1)
+    c.setFillColor(GREEN_TXT)
+    c.setFont('Sans-Bold', 10)
+    c.drawString(left + 10, y + 2, "Note:")
+    c.setFillColor(DARK)
+    c.setFont('Sans', 10)
+    c.drawString(left + 44, y + 2, f"Examples only. You set your own tuition. A private lesson in your area is "
+                                  f"about {r['private']} an hour.")
+    c.drawString(left + 44, y - 11, "First year of your annual license is free, then $499 a year. "
+                                    "Each student needs a $120 book set.")
+
+    c.showPage()
+    c.save()
+    return path
 
 
 # ------------------------------ launch kit brochure ------------------------------
