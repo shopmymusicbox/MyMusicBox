@@ -19,7 +19,7 @@ from reportlab.pdfgen import canvas
 from build_trial_class_flyers import INVITE, REMINDER
 
 HERE = os.path.dirname(os.path.abspath(__file__))
-OUT = os.path.join(HERE, "basic")
+OUT = os.path.join(HERE, "basic", "plain")
 LIB = "/usr/share/fonts/truetype/liberation"
 pdfmetrics.registerFont(TTFont("Plain", f"{LIB}/LiberationSans-Regular.ttf"))
 pdfmetrics.registerFont(TTFont("Plain-Bold", f"{LIB}/LiberationSans-Bold.ttf"))
