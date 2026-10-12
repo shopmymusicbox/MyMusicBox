@@ -41,8 +41,8 @@ TILE_STYLES = [
 ]
 
 REGIONS = {
-    "Region1": dict(founding=2200, lesson=(30, 45)),
-    "Region2": dict(founding=1600, lesson=(15, 25)),
+    "Region1": dict(founding=2200, lesson=(35, 50)),
+    "Region2": dict(founding=1600, lesson=(15, 30)),
 }
 LESSONS_PER_MONTH = 4
 
@@ -166,7 +166,8 @@ def build_overlay(page_w, page_h, r):
     c.drawString(LEFT, Y(566), f"Months to earn your ${fee:,} training back")
     c.setFillColor(MUTED)
     c.setFont("Inter-Regular", 9.5)
-    c.drawString(LEFT, Y(580), "At the middle of the price range")
+    c.drawString(LEFT, Y(580), f"At the average price: ${(lo + hi) / 2:.2f} per student per lesson "
+                              f"(${lo} + ${hi}, divided by 2)")
 
     mid = (lo + hi) / 2
     longest = fee / (4 * mid * LESSONS_PER_MONTH)

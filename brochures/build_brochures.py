@@ -168,8 +168,8 @@ def build(filename, title, subtitle, left, right, closing, band_color):
 from reportlab.pdfgen import canvas as rl_canvas
 
 REGIONS = {
-    "Region1": dict(standard=2800, founding=2200, lesson=(30, 45)),
-    "Region2": dict(standard=2000, founding=1600, lesson=(15, 25)),
+    "Region1": dict(standard=2800, founding=2200, lesson=(35, 50)),
+    "Region2": dict(standard=2000, founding=1600, lesson=(15, 30)),
 }
 LESSONS_PER_MONTH = 4
 GROUP_SIZES = [(4, PURPLE, PURPLE_TXT), (6, GREEN, GREEN_TXT), (8, ORANGE, ORANGE_TXT)]
@@ -298,7 +298,8 @@ def payback_brochure(region, r):
     y -= 16
     c.setFillColor(MUTED)
     c.setFont('Sans', 10.3)
-    c.drawString(left, y, f"${fee:,} training, at the middle of the price range")
+    c.drawString(left, y, f"${fee:,} training, at the average price: ${(lo + hi) / 2:.2f} per student "
+                          f"per lesson (${lo} + ${hi}, divided by 2)")
     y -= 38
     mid = (lo + hi) / 2
     max_months = fee / (4 * mid * LESSONS_PER_MONTH)
