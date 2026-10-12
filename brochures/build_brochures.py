@@ -168,8 +168,8 @@ def build(filename, title, subtitle, left, right, closing, band_color):
 from reportlab.pdfgen import canvas as rl_canvas
 
 REGIONS = {
-    "Region1": dict(standard=2800, founding=2200, lesson=(30, 45), private="$60 to $80"),
-    "Region2": dict(standard=2000, founding=1600, lesson=(15, 25), private="$25 to $45"),
+    "Region1": dict(standard=2800, founding=2200, lesson=(30, 45)),
+    "Region2": dict(standard=2000, founding=1600, lesson=(15, 25)),
 }
 LESSONS_PER_MONTH = 4
 GROUP_SIZES = [(4, PURPLE, PURPLE_TXT), (6, GREEN, GREEN_TXT), (8, ORANGE, ORANGE_TXT)]
@@ -327,10 +327,9 @@ def payback_brochure(region, r):
     c.drawString(left + 10, y + 2, "Note:")
     c.setFillColor(DARK)
     c.setFont('Sans', 10)
-    c.drawString(left + 44, y + 2, f"Examples only. You set your own tuition. A private lesson in your area is "
-                                  f"about {r['private']} an hour.")
-    c.drawString(left + 44, y - 11, "First year of your annual license is free, then $499 a year. "
-                                    "Each student needs a $120 book set.")
+    c.drawString(left + 44, y + 2, "Examples only. You set your own tuition. "
+                                   "First year of your annual license is free, then $499 a year.")
+    c.drawString(left + 44, y - 11, "Each student needs a $120 book set for each book.")
 
     c.showPage()
     c.save()

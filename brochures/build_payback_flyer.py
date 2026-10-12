@@ -41,8 +41,8 @@ TILE_STYLES = [
 ]
 
 REGIONS = {
-    "Region1": dict(founding=2200, lesson=(30, 45), private="$60 to $80"),
-    "Region2": dict(founding=1600, lesson=(15, 25), private="$25 to $45"),
+    "Region1": dict(founding=2200, lesson=(30, 45)),
+    "Region2": dict(founding=1600, lesson=(15, 25)),
 }
 LESSONS_PER_MONTH = 4
 
@@ -192,8 +192,8 @@ def build_overlay(page_w, page_h, r):
     c.setFont("Inter-Bold", 9)
     c.drawString(LEFT + 10, Y(nt + 16), "Examples only.")
     c.setFont("Inter-Regular", 9)
-    c.drawString(LEFT + 80, Y(nt + 16), f"You set your own tuition. A private lesson in your area is about {r['private']} an hour.")
-    c.drawString(LEFT + 10, Y(nt + 31), "First year of your annual license is free, then $499 a year. Each student needs a $120 book set.")
+    c.drawString(LEFT + 80, Y(nt + 16), "You set your own tuition. First year of your annual license is free,")
+    c.drawString(LEFT + 10, Y(nt + 31), "then $499 a year. Each student needs a $120 book set for each book.")
 
     c.showPage()
     c.save()
