@@ -231,7 +231,7 @@ def payback_brochure(region, r):
     tiles = [
         (PURPLE, PURPLE_TXT, "4 to 8", "students per group"),
         (GREEN, GREEN_TXT, f"${lo * 4}-${hi * 4}", "per student per month"),
-        (ORANGE, ORANGE_TXT, f"{max(1, round(fastest))}-{round(slowest + 0.49)} mo", "to earn your training back"),
+        (ORANGE, ORANGE_TXT, f"{max(2, round(fastest))}-{round(slowest + 0.49)} mo", "to earn your training back"),
     ]
     for i, (a, at, big, small) in enumerate(tiles):
         tile(c, left + i * (tw + gap), y, tw, th, a, at, big, small)

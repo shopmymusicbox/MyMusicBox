@@ -83,7 +83,7 @@ def build_overlay(page_w, page_h, r):
     tiles = [
         ("Students per group", "4 to 8"),
         ("Per student per month", f"${lo * LESSONS_PER_MONTH}-${hi * LESSONS_PER_MONTH}"),
-        ("To earn it back", f"{max(1, round(fastest))}-{round(slowest + 0.49)} months"),
+        ("To earn it back", f"{max(2, round(fastest))}-{round(slowest + 0.49)} months"),
     ]
     for i, ((label, value), (accent, accent_txt)) in enumerate(zip(tiles, TILE_STYLES)):
         x = LEFT + i * (tw + gap)
