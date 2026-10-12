@@ -294,11 +294,10 @@ PNG_NOTES = [(930, H - 120, 48, 1, False, -6)]  # small glyph note beside the fo
 # cute notes in the top corner: (center x, center y, size, beamed pair?, use accent text color, angle)
 CUTE_NOTES = [(690, 128, 32, False, False, -10), (790, 168, 40, False, False, 8),
               (905, 205, 44, True, True, -6)]
-BLUSH = "#FFB3C4"
 
 
 def cute_note(im, cx, cy, s, beamed, color, angle):
-    """A chunky note with a round head, a little face and blush; drawn 4x and scaled down."""
+    """A chunky note with a round head and thick rounded stem; drawn 4x and scaled down."""
     k = 4
     S = s * k
     size = int(S * 7)
@@ -308,15 +307,6 @@ def cute_note(im, cx, cy, s, beamed, color, angle):
 
     def head(hx, hy):
         d.ellipse((hx - 0.75 * S, hy - 0.6 * S, hx + 0.75 * S, hy + 0.6 * S), fill=color)
-        for ex in (-0.28, 0.22):  # eyes
-            d.ellipse((hx + ex * S - 0.09 * S, hy - 0.16 * S - 0.11 * S,
-                       hx + ex * S + 0.09 * S, hy - 0.16 * S + 0.11 * S), fill="white")
-        for bx in (-0.5, 0.45):  # blush
-            d.ellipse((hx + bx * S - 0.13 * S, hy + 0.08 * S - 0.08 * S,
-                       hx + bx * S + 0.13 * S, hy + 0.08 * S + 0.08 * S), fill=BLUSH)
-        d.arc((hx - 0.18 * S, hy - 0.05 * S, hx + 0.14 * S, hy + 0.25 * S), 20, 160,
-              fill="white", width=max(2, int(0.07 * S)))
-
     def stem(x, y_top, y_bot):
         w = 0.28 * S
         d.rounded_rectangle((x - w / 2, y_top, x + w / 2, y_bot), radius=w / 2, fill=color)
