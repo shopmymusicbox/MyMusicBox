@@ -1,6 +1,8 @@
 #!/usr/bin/env python3
 """Collect the launch kit into two PDFs: one for Basic Studios, one for Ambassador Studios.
 
+Run build_kit_pages.py and the flyer/post builders first.
+
 Run the individual builders first; this only collects their output.
 """
 
@@ -140,12 +142,17 @@ def build(variant):
     name = "Basic Studio" if variant == "basic" else "Ambassador Studio"
     out = os.path.join(HERE, f"My Music Box Group Piano Launch Kit - {name}.pdf")
     w = PdfWriter()
-    add(w, cover(variant))
-    add(w, PdfReader(os.path.join(HERE, "MyMusicBox_Group_Class_Launch_Kit_Flyer.pdf")))
+    # page 1 is the overview (it also carries the "how to use" notes, so there is no separate cover);
+    # the basic kit keeps every page in the basic style, the ambassador kit in the cloud-and-balloon style
+    if variant == "basic":
+        overview, captions_pdf = "basic/Launch_Kit_Overview.pdf", "basic/Instagram_Captions.pdf"
+    else:
+        overview, captions_pdf = "MyMusicBox_Group_Class_Launch_Kit_Flyer.pdf", "ambassador/Instagram_Captions.pdf"
+    add(w, PdfReader(os.path.join(HERE, overview)))
     for rel, prefix in files:
         path = os.path.join(HERE, rel)
         add(w, image_page(path) if rel.endswith(".png") else PdfReader(path), prefix)
-    add(w, captions())
+    add(w, PdfReader(os.path.join(HERE, captions_pdf)))
 
     # one form for the whole file, listing every typeable field
     fields = ArrayObject(ref for page in w.pages for ref in page.get("/Annots", [])

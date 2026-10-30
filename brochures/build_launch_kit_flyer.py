@@ -78,7 +78,7 @@ def build_overlay(page_w, page_h):
     c.drawCentredString(cx, Y(224), "Group Class Launch Kit")
     c.setFillColor(MUTED)
     c.setFont("Inter-Regular", 10.5)
-    c.drawCentredString(cx, Y(246), "From your training to your first full group class.")
+    c.drawCentredString(cx, Y(246), "From your training to your first full group class. Included with your Book 1 training.")
 
     width = RIGHT - LEFT
     c.setFillColor(BLUE)
@@ -149,24 +149,25 @@ def build_overlay(page_w, page_h):
         c.setFont("Inter-Regular", 9)
         c.drawString(x + 16, Y(t + 32), desc)
 
-    # why one visit
+    # trial class video
     nt, nh = kit_top + 12 + 2 * ph + pg + 12, 40
     c.setFillColor(NOTE_FILL)
     c.setStrokeColor(NOTE_LINE)
     c.roundRect(LEFT, Y(nt + nh), width, nh, 8, stroke=1, fill=1)
     c.setFillColor(DARK)
     c.setFont("Inter-Bold", 9.5)
-    c.drawString(LEFT + 12, Y(nt + 16), "Why one visit?")
+    c.drawString(LEFT + 12, Y(nt + 16), "Trial class video:")
     c.setFont("Inter-Regular", 9.5)
-    c.drawString(LEFT + 89, Y(nt + 16), "Parents see their child sing and play in a real class,")
-    c.drawString(LEFT + 12, Y(nt + 30), "then get their questions answered right away. Busy families only come once.")
+    label_w = c.stringWidth("Trial class video: ", "Inter-Bold", 9.5)
+    c.drawString(LEFT + 12 + label_w, Y(nt + 16), "watch a full 30 minute trial class taught with")
+    c.drawString(LEFT + 12, Y(nt + 30), "My Music Box songs, then teach your own the same way.")
 
     closing = nt + nh + 16
     assert closing <= COVER_BOTTOM - 2, f"content runs to {closing}"
     c.setFillColor(MUTED)
     c.setFont("Inter-Regular", 9.5)
-    c.drawCentredString(cx, Y(closing), "Included with your Book 1 training as a founding teacher. "
-                                        "Start with 4 students and grow from there.")
+    c.drawCentredString(cx, Y(closing), "How to use: type your details on the flyers, then print or email. "
+                                        "Captions are on the last pages.")
     c.showPage()
     c.save()
     buf.seek(0)
