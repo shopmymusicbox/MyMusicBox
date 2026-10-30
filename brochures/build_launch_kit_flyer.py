@@ -20,10 +20,10 @@ TEAL, TEAL_TXT = colors.HexColor("#4AC3D4"), colors.HexColor("#0F4F58")
 ORANGE, ORANGE_TXT = colors.HexColor("#FAD294"), colors.HexColor("#845100")
 GREEN, GREEN_TXT = colors.HexColor("#C1D83F"), colors.HexColor("#4F5B0E")
 
-COMMUNITY = ("During your training: community class",
-             "Offer a free or paid music class at your local library or a preschool. Watch the trial "
-             "class video first: it shows you what a real trial class looks like. Collect the names "
-             "of interested families.")
+COMMUNITY = ("Start with a community class",
+             "Offer a free or paid music class with My Music Box songs at your local library or a "
+             "preschool. Watch the trial class video first to see what a real trial class looks like. "
+             "Collect the names of interested families.")
 
 STEPS = [
     ("Week 1", "Invite families",
@@ -78,12 +78,12 @@ def build_overlay(page_w, page_h):
     c.drawCentredString(cx, Y(224), "Group Class Launch Kit")
     c.setFillColor(MUTED)
     c.setFont("Inter-Regular", 10.5)
-    c.drawCentredString(cx, Y(246), "From your training to your first full group class. Included with your Book 1 training.")
+    c.drawCentredString(cx, Y(246), "From certification to your first full group class. Included with your Book 1 training.")
 
     width = RIGHT - LEFT
     c.setFillColor(BLUE)
     c.setFont("Fredoka-SemiBold", 14)
-    c.drawString(LEFT, Y(274), "Your path, step by step")
+    c.drawString(LEFT, Y(274), "After your Book 1 certification")
 
     # during training: full-width community class card
     top, band = 284, 24
@@ -106,7 +106,7 @@ def build_overlay(page_w, page_h):
     after = top + ch + 20
     c.setFillColor(BLUE)
     c.setFont("Fredoka-Medium", 11)
-    c.drawString(LEFT, Y(after), "After your Book 1 certification")
+    c.drawString(LEFT, Y(after), "Then, over three weeks")
     gap, top, th = 14, after + 10, 114
     tw = (width - 2 * gap) / 3
     for i, (week, title, body, accent, accent_txt) in enumerate(STEPS):

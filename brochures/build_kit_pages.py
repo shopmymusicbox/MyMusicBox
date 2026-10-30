@@ -156,7 +156,7 @@ def basic_overview():
     c.roundRect(M, Y(110), 44, 4, 2, stroke=0, fill=1)
     c.setFillColor(GRAY)
     c.setFont("Sans", 11.5)
-    c.drawString(M, Y(132), "From your training to your first full group class. Included with your Book 1 training.")
+    c.drawString(M, Y(132), "From certification to your first full group class. Included with your Book 1 training.")
 
     def heading(top, text):
         c.setFillColor(NAVY)
@@ -164,7 +164,7 @@ def basic_overview():
         c.drawString(M, Y(top), text)
 
     # community class
-    heading(166, "Your path, step by step")
+    heading(166, "After your Book 1 certification")
     title, body = COMMUNITY
     lines = simpleSplit(body, "Sans", 10, width - 36)
     top, h = 178, 34 + len(lines) * 14
@@ -181,7 +181,7 @@ def basic_overview():
     after = top + h + 24
     c.setFillColor(TXT)
     c.setFont("Sans-Bold", 10.5)
-    c.drawString(M, Y(after), "After your Book 1 certification")
+    c.drawString(M, Y(after), "Then, over three weeks")
     gap, wt = 14, after + 10
     tw = (width - 2 * gap) / 3
     wh = 112
