@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Combine the launch kit materials into one PDF: "My Music Box Group Piano Launch Kit".
+"""Collect the launch kit into two PDFs: one for Basic Studios, one for Ambassador Studios.
 
 Run the individual builders first; this only collects their output.
 """
@@ -20,7 +20,6 @@ from reportlab.platypus import BaseDocTemplate, Frame, PageTemplate, Paragraph, 
 from build_brochures import DARK, MUTED, PURPLE, PURPLE_TXT, make_on_page
 
 HERE = os.path.dirname(os.path.abspath(__file__))
-OUT = os.path.join(HERE, "My Music Box Group Piano Launch Kit.pdf")
 MARGIN = 0.7 * inch
 
 BASIC = [
@@ -56,18 +55,24 @@ def text_pages(flowables):
     return PdfReader(buf)
 
 
-def cover():
+def cover(variant):
+    if variant == "basic":
+        title = "My Music Box Group Piano Launch Kit: Basic Studio"
+        who = ("For every licensed My Music Box teacher. These pieces use a neutral look, so your own "
+               "studio name comes first. The only brand mention is \"Taught by a Book 1 Certified "
+               "My Music Box Teacher\".")
+    else:
+        title = "My Music Box Group Piano Launch Kit: Ambassador Studio"
+        who = ("For Ambassador Studios only. These pieces use the My Music Box color palette, fonts and "
+               "artwork, which are part of the Ambassador Studio partnership.")
     items = [
         ("Launch kit overview", "Your path from training to your first full group class."),
-        ("Basic Studio materials", "For every licensed teacher: trial class invite flyer, reminder flyer "
-                                   "and three Instagram posts, in a neutral style with your own studio name."),
-        ("Ambassador Studio materials", "For Ambassador Studios only: the same pieces with the My Music Box "
-                                        "palette, fonts and artwork."),
+        ("Trial class invite", "A flyer to post or email to families."),
+        ("Trial class reminder", "A flyer to send to families who signed up."),
+        ("Three Instagram posts", "Invite, what happens in a trial class, and last spots."),
         ("Instagram captions", "A ready-to-edit caption for each post."),
     ]
-    f = [Spacer(1, 0.6 * inch), Paragraph("My Music Box Group Piano Launch Kit", H1),
-         Paragraph("Everything you need to fill your first group class.", SUB),
-         Paragraph("What's inside", H2)]
+    f = [Spacer(1, 0.6 * inch), Paragraph(title, H1), Paragraph(who, SUB), Paragraph("What's inside", H2)]
     for i, (head, desc) in enumerate(items, 1):
         f.append(Paragraph(f"<b>{i}. {head}.</b> {desc}", BODY))
     f += [Paragraph("How to use the flyers", H2),
@@ -130,25 +135,16 @@ def add(writer, reader, prefix=None):
                 annot[NameObject("/T")] = TextStringObject(f"{prefix}_{annot['/T']}")
 
 
-def build():
+def build(variant):
+    files = BASIC if variant == "basic" else AMBASSADOR
+    name = "Basic Studio" if variant == "basic" else "Ambassador Studio"
+    out = os.path.join(HERE, f"My Music Box Group Piano Launch Kit - {name}.pdf")
     w = PdfWriter()
-    add(w, cover())
+    add(w, cover(variant))
     add(w, PdfReader(os.path.join(HERE, "MyMusicBox_Group_Class_Launch_Kit_Flyer.pdf")))
-    for title, lines, files in [
-        ("Basic Studio", ["For every licensed My Music Box teacher.",
-                          "Your own studio name comes first. These pieces use a neutral look, and the only "
-                          "brand mention is \"Taught by a Book 1 Certified My Music Box Teacher\".",
-                          "Pages: trial class invite, trial class reminder, three Instagram posts."], BASIC),
-        ("Ambassador Studio", ["For Ambassador Studios only.",
-                               "These pieces use the My Music Box color palette, fonts and artwork, which are "
-                               "part of the Ambassador Studio partnership.",
-                               "Pages: trial class invite, trial class reminder, three Instagram posts."],
-         AMBASSADOR),
-    ]:
-        add(w, divider(title, lines))
-        for rel, prefix in files:
-            path = os.path.join(HERE, rel)
-            add(w, image_page(path) if rel.endswith(".png") else PdfReader(path), prefix)
+    for rel, prefix in files:
+        path = os.path.join(HERE, rel)
+        add(w, image_page(path) if rel.endswith(".png") else PdfReader(path), prefix)
     add(w, captions())
 
     # one form for the whole file, listing every typeable field
@@ -161,11 +157,12 @@ def build():
         NameObject("/DR"): dr.get_object().clone(w),
         NameObject("/NeedAppearances"): BooleanObject(True),
     }))
-    w.add_metadata({"/Title": "My Music Box Group Piano Launch Kit", "/Author": "MyMusicBox Academy"})
-    with open(OUT, "wb") as f:
+    w.add_metadata({"/Title": f"My Music Box Group Piano Launch Kit: {name}", "/Author": "MyMusicBox Academy"})
+    with open(out, "wb") as f:
         w.write(f)
-    return OUT, len(w.pages), len(fields)
+    return out, len(w.pages), len(fields)
 
 
 if __name__ == "__main__":
-    print(*build(), sep="\n")
+    for variant in ("basic", "ambassador"):
+        print(*build(variant))
