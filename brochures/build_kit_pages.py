@@ -231,8 +231,8 @@ def basic_overview():
     c.drawString(M + 16, Y(vt + 20), "Trial class video")
     c.setFillColor(NAVY)
     c.setFont("Sans", 10)
-    c.drawString(M + 16, Y(vt + 36), "Watch a full 30 minute trial class taught with My Music Box songs, "
-                                     "then teach your own the same way.")
+    c.drawString(M + 16, Y(vt + 36), "A demo of a real 30 minute trial class, so you can see exactly how it "
+                                     "runs before you teach your own.")
 
     # how to use
     ht = vt + vh + 28

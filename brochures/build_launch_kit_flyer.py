@@ -21,8 +21,8 @@ ORANGE, ORANGE_TXT = colors.HexColor("#FAD294"), colors.HexColor("#845100")
 GREEN, GREEN_TXT = colors.HexColor("#C1D83F"), colors.HexColor("#4F5B0E")
 
 COMMUNITY = ("During your training: community class",
-             "Offer a free or paid music class at your local library or a preschool. Use your own "
-             "songs and games, since My Music Box songs are for certified teachers. Collect the names "
+             "Offer a free or paid music class at your local library or a preschool. Watch the trial "
+             "class video first: it shows you what a real trial class looks like. Collect the names "
              "of interested families.")
 
 STEPS = [
@@ -159,8 +159,8 @@ def build_overlay(page_w, page_h):
     c.drawString(LEFT + 12, Y(nt + 16), "Trial class video:")
     c.setFont("Inter-Regular", 9.5)
     label_w = c.stringWidth("Trial class video: ", "Inter-Bold", 9.5)
-    c.drawString(LEFT + 12 + label_w, Y(nt + 16), "watch a full 30 minute trial class taught with")
-    c.drawString(LEFT + 12, Y(nt + 30), "My Music Box songs, then teach your own the same way.")
+    c.drawString(LEFT + 12 + label_w, Y(nt + 16), "a demo of a real 30 minute trial class, so you")
+    c.drawString(LEFT + 12, Y(nt + 30), "can see exactly how it runs before you teach your own.")
 
     closing = nt + nh + 16
     assert closing <= COVER_BOTTOM - 2, f"content runs to {closing}"
