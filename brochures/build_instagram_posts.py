@@ -49,14 +49,28 @@ def base():
     aw = 860
     art = art.resize((aw, int(art.height * aw / art.width)), Image.LANCZOS)
     im.paste(art, ((W - aw) // 2, 96))
-    footer(d)
+    footer(im, d)
     return im, d, 96 + art.height + 18
 
 
-def footer(d):
+LOGO = os.path.join(HERE, "assets", "mymusicbox_logo.png")
+
+
+def footer(im, d):
+    """My Music Box logo with the Certified Partner Studio mark (Ambassador Studios only)."""
     y = CARD_BOTTOM - 96
     d.line((110, y, W - 110, y), fill="#E5E4E2", width=2)
-    centered(d, y + 26, "Taught by a Certified My Music Box Teacher", font("Fredoka-Medium", 30), PLUM)
+    logo = Image.open(LOGO)
+    lh = 58
+    logo = logo.resize((int(logo.width * lh / logo.height), lh), Image.LANCZOS)
+    f = font("Fredoka-Medium", 30)
+    label = "My Music Box Certified Partner Studio"
+    gap = 16
+    total = logo.width + gap + text_w(d, label, f)
+    x = (W - total) / 2
+    im.paste(logo, (int(x), int(y + 14)), logo)
+    b = d.textbbox((0, 0), label, font=f)
+    d.text((x + logo.width + gap, y + 14 + (lh - (b[3] - b[1])) / 2 - b[1]), label, font=f, fill=PLUM)
 
 
 def pill(d, cx, y, label, colors_, f, pad_x=34, h=64):
