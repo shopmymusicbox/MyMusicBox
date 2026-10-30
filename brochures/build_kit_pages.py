@@ -25,6 +25,7 @@ from build_payback_flyer import (TEMPLATE, BLUE, DARK as CLOUD_DARK, MUTED as CL
 
 HERE = os.path.dirname(os.path.abspath(__file__))
 CAPTIONS_MD = os.path.join(HERE, "instagram", "captions.md")
+LOGO = os.path.join(HERE, "assets", "mymusicbox_logo.png")
 
 BAND, TINT, TXT = (colors.HexColor(h) for h in basic.HUES["indigo"])
 NAVY = colors.HexColor(basic.NAVY)
@@ -122,9 +123,14 @@ def basic_frame(c, footer, notes=True):
     c.setStrokeColor(RULE)
     c.setLineWidth(0.75)
     c.line(M, 46, PAGE_W - M, 46)
+    # My Music Box logo and name on the left, kit name on the right
+    c.drawImage(LOGO, M, 18, width=26, height=26 * 418 / 471, mask="auto")
+    c.setFillColor(NAVY)
+    c.setFont("Sans-Bold", 10)
+    c.drawString(M + 32, 27, "My Music Box Academy")
     c.setFillColor(GRAY)
     c.setFont("Sans", 9)
-    c.drawString(M, 31, footer)
+    c.drawRightString(PAGE_W - M, 27, footer)
 
 
 def wrapped(c, text, font, size, x, top, width, leading, color):
@@ -261,7 +267,7 @@ def basic_captions():
                           spaceBefore=9, spaceAfter=3)
     body = ParagraphStyle("b", fontName="Sans", fontSize=10.3, leading=14, textColor=NAVY, spaceAfter=2)
     r = flow_onto_pages(caption_flowables(title, intro, head, body), LETTER,
-                        (M, 62, PAGE_W - 2 * M, PAGE_H - 62 - 50),
+                        (M, 66, PAGE_W - 2 * M, PAGE_H - 66 - 50),
                         lambda c: basic_frame(c, "My Music Box Group Piano Launch Kit: Basic Studio", notes=False))
     path = os.path.join(HERE, "basic", "Instagram_Captions.pdf")
     out = PdfWriter()

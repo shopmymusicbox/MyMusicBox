@@ -16,7 +16,31 @@ from reportlab.lib.units import inch
 from reportlab.platypus import (BaseDocTemplate, Flowable, Frame, HRFlowable, PageTemplate, Paragraph,
                                 Spacer, Table, TableStyle)
 
-from build_brochures import (DARK, MUTED, BORDER, PANEL, bullet_line, plain_bullet_column)
+import build_brochures
+from build_brochures import (DARK, MUTED, BORDER, PANEL, plain_bullet_column)
+
+
+class Dot(Flowable):
+    """A round bullet drawn level with the first line of text (Nunito has no round bullet glyph)."""
+
+    def __init__(self, color, size):
+        super().__init__()
+        self.color, self.size = color, size
+        self.width, self.height = size, size + 3.5
+
+    def draw(self):
+        self.canv.setFillColor(self.color)
+        self.canv.circle(2.6, self.height - self.size * 0.62, 2.4, stroke=0, fill=1)
+
+
+def bullet_line(text, accent_txt, size=10.8):
+    """Same as the house-style bullet line, with a drawn dot instead of a font glyph."""
+    label = Paragraph(text, ParagraphStyle("bt", fontName="Sans-Bold", fontSize=size,
+                                            leading=size + 3.5, textColor=DARK))
+    return Dot(accent_txt, size), label
+
+
+build_brochures.bullet_line = bullet_line  # plain_bullet_column looks it up there
 
 from reportlab.pdfbase import pdfmetrics
 from reportlab.pdfbase.ttfonts import TTFont
@@ -24,6 +48,11 @@ from reportlab.pdfbase.ttfonts import TTFont
 HERE = os.path.dirname(os.path.abspath(__file__))
 FONTS = os.path.join(HERE, "fonts")
 # Nunito: rounded and friendly, and not the My Music Box brand font (Fredoka)
+# build_brochures registered Liberation under these names first, and reportlab keeps the first
+# registration, so drop it before registering Nunito
+for _name in ("Sans", "Sans-Bold"):
+    pdfmetrics._fonts.pop(_name, None)
+    pdfmetrics._typefaces.pop(_name, None)
 pdfmetrics.registerFont(TTFont("Sans", os.path.join(FONTS, "Nunito-Regular.ttf")))
 pdfmetrics.registerFont(TTFont("Sans-Bold", os.path.join(FONTS, "Nunito-Bold.ttf")))
 pdfmetrics.registerFont(TTFont("Sans-XBold", os.path.join(FONTS, "Nunito-ExtraBold.ttf")))
